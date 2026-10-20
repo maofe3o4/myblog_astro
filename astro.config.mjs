@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 // 六花 / Six Flowers 博客
 export default defineConfig({
   site: 'https://fe3o4myblogastro.vercel.app',
-  prefetch: true,
+  prefetch: { prefetchAll: false, defaultStrategy: 'viewport' },
   trailingSlash: 'ignore',
   build: {
     format: 'directory',

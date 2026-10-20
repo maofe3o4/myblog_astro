@@ -113,6 +113,20 @@ html {
   * { transition: none !important; animation: none !important; }
 }
 
+/* 页面切换入场：主内容区从下方淡入。
+   注意：早期曾用 ::view-transition-new(main) + view-transition-name:main，
+   但新旧 #main 尺寸不同会被浏览器以「缩放」形变过渡，导致关于页放大缩小/残影。
+   现改为在 astro:page-load 时由 JS 给 #main 加 .is-entering 重放本动画（纯位移+淡入，无缩放、无残留）。 */
+@media (prefers-reduced-motion: no-preference) {
+  #main.is-entering {
+    animation: contentIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  @keyframes contentIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);

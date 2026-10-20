@@ -42,11 +42,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
     <!-- 视图过渡导航：切换页面不重建 DOM，音乐播放不中断 -->
     <ClientRouter />
 
-    <!-- 预取：同站链接进入视口即提前拉取，视图过渡切换近乎瞬时，显著改善“切换卡” -->
+    <!-- 预取由 astro.config 的 prefetch 配置自动注入，无需手写；
+         头部交互（主题/搜索/导航药丸/内容入场）借助本模块（含外部 import，会被打包）执行 -->
     <script>
-      import { prefetch } from 'astro:prefetch';
-      prefetch({ defaultStrategy: 'viewport' });
-      document.addEventListener('astro:page-load', () => prefetch());
+      import { initHeader } from '../lib/header';
+      initHeader();
     </script>
 
     <!-- 主题/文字风格/主色初始化：首屏绘制前确定；视图过渡导航后强制恢复，防止重置 -->
@@ -98,6 +98,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
       }
       initReveal();
       document.addEventListener('astro:page-load', initReveal);
+
     </script>
   </head>
   <body>
