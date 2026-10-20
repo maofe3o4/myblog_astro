@@ -1,0 +1,322 @@
+/* =================================================================
+   六花 / Rikka  —  全局主题样式
+   设计理念：以动漫角色「小鸟游六花」为意象，构建可定制的 CSS 变量主题。
+   主色取「邪王真眼」的苍蓝辉光，辅以缎带金与魔法紫；
+   「六」的数字母题延伸为六色星辉，循环用于标签着色。
+   ================================================================= */
+
+/* ---------- 1. 设计令牌（Design Tokens） ---------- */
+:root {
+  /* 六色星辉：以「六花」为意象的六色轮，按索引循环用于标签 */
+  --c1: #2f7fd1; /* 邪王真眼 · 苍蓝 */
+  --c2: #d9a441; /* 缎带 · 金       */
+  --c3: #8a5cd1; /* 魔法 · 紫       */
+  --c4: #d35c8a; /* 黄昏 · 绯       */
+  --c5: #4caf87; /* 翠 · 青绿       */
+  --c6: #5b6cc4; /* 夜 · 靛         */
+
+  /* 品牌主色：由「主题主色色相」滑块驱动（HSL 色相，默认 211 ≈ 邪王真眼·苍蓝） */
+  --accent-hue: 211;
+  --brand: hsl(var(--accent-hue, 211) 62% 53%);
+  --brand-soft: color-mix(in srgb, var(--brand) 14%, transparent);
+
+  /* 浅色主题（白昼）表面与文字 */
+  --bg: #f7f6fb;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #efecf6;
+  --text: #232038;
+  --text-soft: #4a4760;
+  --text-muted: #8b88a0;
+  --border: #e4e0ee;
+  --border-strong: #d3cde2;
+
+  /* 排版 */
+  --font-serif: "Noto Serif SC", "Songti SC", "SimSun", Georgia, "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --fs-base: 17px;
+  --lh-base: 1.75;
+
+  /* 间距与圆角 */
+  --space-page: clamp(1.25rem, 4vw, 3rem);
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(35, 32, 56, 0.06);
+  --shadow: 0 6px 24px rgba(35, 32, 56, 0.08);
+  --shadow-lg: 0 18px 48px rgba(35, 32, 56, 0.12);
+
+  /* 布局 */
+  --content-width: 720px;
+  --wide-width: 1100px;
+
+  --header-h: 64px;
+  --transition: 180ms ease;
+}
+
+/* ---------- 2. 深色主题（暗夜黑，中性色调不偏紫） ---------- */
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --bg-elevated: #16181d;
+  --surface: #16181d;
+  --surface-2: #1e2128;
+  --text: #e8eaf0;
+  --text-soft: #c2c6d0;
+  --text-muted: #878c9a;
+  --border: #292c34;
+  --border-strong: #3c404b;
+  --brand-soft: color-mix(in srgb, var(--brand) 22%, transparent);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* 深色下弱化页面光斑：只保留主题色晕（去紫色光斑） */
+html[data-theme="dark"] {
+  background-image: radial-gradient(circle at 12% 18%, var(--brand-soft), transparent 38%);
+}
+
+/* ---------- 2b. 文字风格：无衬线（现代风） ----------
+   默认（serif）保持标题衬线、正文无衬线；选 sans 后标题也转无衬线。 */
+:root[data-font="sans"] {
+  --font-serif: var(--font-sans);
+}
+
+/* ---------- 2c. 主题主色由 --accent-hue 驱动（见 :root 顶部 --brand） ---------- */
+
+/* ---------- 3. 基础重置 ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: var(--fs-base);
+  -webkit-text-size-adjust: 100%;
+  /* 页面背景上移到 html，给 fixed 星空画布让位 */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 18%, var(--brand-soft), transparent 38%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--c3) 12%, transparent), transparent 42%);
+  background-attachment: fixed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--lh-base);
+  color: var(--text);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 内容层位于 fixed 星空画布（z-index:0）之上 */
+main,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover { color: var(--brand); }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--text);
+  margin: 1.6em 0 0.6em;
+}
+h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin-top: 0; }
+h2 { font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
+h3 { font-size: 1.3rem; }
+
+p { margin: 0 0 1.1em; }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-2);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+}
+pre {
+  background: var(--surface-2);
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+pre code { background: none; padding: 0; }
+
+blockquote {
+  margin: 1.4em 0;
+  padding: 0.6em 1.1em;
+  border-left: 4px solid var(--brand);
+  background: var(--brand-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-soft);
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.4em 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.4em 0;
+  font-size: 0.95em;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.55em 0.8em;
+  text-align: left;
+}
+th { background: var(--surface-2); }
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--text);
+}
+
+/* ---------- 4. 布局容器 ---------- */
+.container {
+  width: 100%;
+  max-width: var(--wide-width);
+  margin-inline: auto;
+  padding-inline: var(--space-page);
+}
+.container--narrow {
+  max-width: var(--content-width);
+}
+.container--wide {
+  max-width: 1360px;
+}
+
+/* ---------- 5. 按钮 / 标签 / 徽章 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.55em 1.1em;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.btn--primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.btn--primary:hover { color: #fff; filter: brightness(1.05); }
+
+/* 导航栏图标按钮：搜索 / 主题 / 设置 共用，统一为线性描边 + 圆形 hover 浅底 */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition), background var(--transition), transform var(--transition);
+}
+.icon-btn:hover { color: var(--text); background: var(--surface-2); }
+.icon-btn:active { transform: scale(0.9); }
+.icon-btn svg { display: block; }
+
+/* 全局错峰入场：列表/卡片/区块加 class="reveal"，可选 style="--i:n" 控错峰 */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+
+.tag {
+  display: inline-block;
+  padding: 0.2em 0.7em;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.6;
+  text-decoration: none;
+  color: var(--tag-color, var(--brand));
+  background: color-mix(in srgb, var(--tag-color, var(--brand)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--brand)) 30%, transparent);
+  transition: background var(--transition);
+}
+.tag:hover {
+  color: var(--tag-color, var(--brand));
+  background: color-mix(in srgb, var(--tag-color, var(--brand)) 22%, transparent);
+}
+
+/* 标签循环配色：通过 data-index 取值（0-5 映射到六色星辉） */
+.tag[data-index="0"] { --tag-color: var(--c1); }
+.tag[data-index="1"] { --tag-color: var(--c2); }
+.tag[data-index="2"] { --tag-color: var(--c3); }
+.tag[data-index="3"] { --tag-color: var(--c4); }
+.tag[data-index="4"] { --tag-color: var(--c5); }
+.tag[data-index="5"] { --tag-color: var(--c6); }
+
+/* ---------- 6. 工具类 ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+.muted { color: var(--text-muted); }
+.soft { color: var(--text-soft); }
+.text-center { text-align: center; }
+
+/* ---------- 主题切换：从点击处圆形展开（View Transition） ---------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2147483646; }

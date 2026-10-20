@@ -1,0 +1,339 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Cover from '../../components/Cover.astro';
+import { getNotes, getCategoryMap, getNoteTagMap, tagColorIndex } from '../../lib/posts';
+
+const notes = await getNotes();
+const catEntries = [...(await getCategoryMap()).entries()];
+const tagEntries = [...(await getNoteTagMap()).entries()];
+
+/** 默认展示的标签数，其余折叠进「展开其余 N 个」 */
+const TAG_COLLAPSE = 12;
+const hiddenTags = Math.max(0, tagEntries.length - TAG_COLLAPSE);
+const fmt = (d: Date) =>
+  d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<BaseLayout title="笔记" description="按分类与标签归档的笔记">
+  <div class="page-head">
+    <h1>笔记</h1>
+    <p class="muted">共 {notes.length} 篇 · {catEntries.length} 个分类 · {tagEntries.length} 个标签</p>
+  </div>
+
+  <section class="facet">
+    <h2 class="facet__title">
+      <svg class="facet__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+      </svg>
+      分类
+    </h2>
+    <div class="facet__chips">
+      {catEntries.map(([cat, count]) => (
+        <button type="button" class="chip" data-filter="cat" data-value={cat}>
+          <span class="chip__label">{cat}</span>
+          <span class="chip__count">{count}</span>
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <section class="facet">
+    <h2 class="facet__title">
+      <span class="facet__icon facet__icon--hash" aria-hidden="true">#</span>
+      标签
+    </h2>
+    <div class="facet__chips" id="tag-chips">
+      {tagEntries.map(([tag, count], i) => (
+        <button
+          type="button"
+          class:list={['chip', 'chip--tag', { 'chip--folded': i >= TAG_COLLAPSE }]}
+          data-filter="tag"
+          data-value={tag}
+          data-index={tagColorIndex(tag) - 1}
+        >
+          <span class="chip__label">{tag}</span>
+          <span class="chip__count">{count}</span>
+        </button>
+      ))}
+    </div>
+    {hiddenTags > 0 && (
+      <button id="tag-toggle" class="facet__toggle" type="button" aria-expanded="false" data-count={hiddenTags}>
+        <span id="tag-toggle-text">展开其余 {hiddenTags} 个</span>
+        <svg class="facet__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+    )}
+  </section>
+
+  <section class="all-notes">
+    <h2 class="all-notes__title">全部笔记</h2>
+    <div class="filter-status" id="filter-status" hidden>
+      <span id="filter-status-text"></span>
+      <button type="button" id="filter-clear" class="filter-status__clear">清除筛选 ✕</button>
+    </div>
+    <ul class="archive">
+      {notes.map((post, i) => (
+        <li
+          class:list={['archive-item', 'reveal']}
+          style={`--i:${i % 12}`}
+          data-category={post.data.category ?? ''}
+          data-tags={post.data.tags.join(' ')}
+        >
+          <a href={`/blog/${post.id}/`} class="archive-item__link">
+            <div class="archive-item__cover"><Cover entry={post} /></div>
+            <div class="archive-item__body">
+              <div class="archive-item__meta">
+                {post.data.category && <span class="archive-item__cat">{post.data.category}</span>}
+                <time datetime={post.data.pubDate.toISOString()} class="archive-item__date">
+                  {fmt(post.data.pubDate)}
+                </time>
+              </div>
+              <span class="archive-item__title">{post.data.title}</span>
+              {post.data.description && <span class="archive-item__desc soft">{post.data.description}</span>}
+              <div class="archive-item__tags">
+                {post.data.tags.map((t) => <span class="tag" data-index={tagColorIndex(t) - 1}>{t}</span>)}
+              </div>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="archive-empty" id="archive-empty" hidden>没有符合条件的笔记</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-head { margin-bottom: 1.6rem; }
+
+  /* ---------- 分类 / 标签 胶囊区 ---------- */
+  .facet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .facet__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.85rem;
+    color: var(--text-soft);
+  }
+  .facet__icon { width: 1.05em; height: 1.05em; color: var(--brand); }
+  .facet__icon--hash { color: var(--brand); font-weight: 700; }
+
+  .facet__chips { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  .facet__chips .chip--folded { display: none; }
+  .facet__chips.is-expanded .chip--folded { display: inline-flex; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32em 0.8em;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text-soft);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
+  }
+  .chip:active { transform: scale(0.95); }
+  .chip:hover {
+    color: var(--brand);
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+  .chip.is-active {
+    color: var(--brand);
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+  .chip__count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--text-muted) 14%, transparent);
+    border-radius: 999px;
+    padding: 0.05em 0.5em;
+    line-height: 1.5;
+  }
+  /* 标签胶囊沿用六色星辉 */
+  .chip--tag[data-index='0'] { --chip-color: var(--c1); }
+  .chip--tag[data-index='1'] { --chip-color: var(--c2); }
+  .chip--tag[data-index='2'] { --chip-color: var(--c3); }
+  .chip--tag[data-index='3'] { --chip-color: var(--c4); }
+  .chip--tag[data-index='4'] { --chip-color: var(--c5); }
+  .chip--tag[data-index='5'] { --chip-color: var(--c6); }
+  .chip--tag:hover,
+  .chip--tag.is-active {
+    color: var(--chip-color, var(--brand));
+    border-color: color-mix(in srgb, var(--chip-color, var(--brand)) 55%, transparent);
+    background: color-mix(in srgb, var(--chip-color, var(--brand)) 12%, transparent);
+  }
+
+  .facet__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.8rem;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: color var(--transition), transform var(--transition);
+  }
+  .facet__toggle:hover { color: var(--brand); }
+  .facet__toggle:active { transform: scale(0.96); }
+  .facet__caret { width: 1em; height: 1em; transition: transform var(--transition); }
+  .facet__toggle[aria-expanded='true'] .facet__caret { transform: rotate(180deg); }
+
+  /* ---------- 全部笔记列表 ---------- */
+  .all-notes { margin-top: 2rem; }
+  .all-notes__title {
+    font-size: 1.2rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-status {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin: -0.3rem 0 0.9rem;
+    font-size: 0.88rem;
+    color: var(--text-soft);
+  }
+  .filter-status[hidden] { display: none; }
+  .filter-status__clear {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--brand);
+    cursor: pointer;
+  }
+  .filter-status__clear:hover { text-decoration: underline; }
+
+  .archive-empty {
+    margin: 2rem 0;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .archive { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+  .archive-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition);
+  }
+  .archive-item:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .archive-item__link { display: flex; gap: 1rem; color: inherit; padding: 0.7rem; }
+  .archive-item__link:hover { color: inherit; }
+  .archive-item__cover { flex: 0 0 120px; min-width: 0; overflow: hidden; }
+  .archive-item__cover :global(.cover) { width: 100%; aspect-ratio: 16 / 10; border-radius: var(--radius-sm); display: block; transition: transform var(--transition); }
+  .archive-item:hover .archive-item__cover :global(.cover) { transform: scale(1.06); }
+  .archive-item__body { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+  .archive-item__meta { display: flex; align-items: baseline; gap: 0.6rem; }
+  .archive-item__cat { font-size: 0.78rem; font-weight: 700; color: var(--c2); }
+  .archive-item__date { font-size: 0.8rem; color: var(--text-muted); }
+  .archive-item__title { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600; }
+  .archive-item__desc { font-size: 0.9rem; }
+  .archive-item__tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.2rem; }
+  @media (max-width: 520px) {
+    .archive-item__link { flex-direction: column; }
+    .archive-item__cover { flex-basis: auto; }
+  }
+</style>
+
+<script>
+  // 支持视图过渡导航：每次页面加载（含 astro:page-load）都重新绑定
+  function initNotesPage() {
+    // ---------- 幂等保护 ----------
+    // ClientRouter 会在首次加载时也触发 astro:page-load，
+    // 直接执行 + 事件触发会导致监听器绑定两次（点击被"展开又收起"抵消）。
+    // 用元素上的标记保证同一批 DOM 只绑定一次；视图过渡换页后新 DOM 无标记，可重新绑定。
+    const toggle = document.getElementById('tag-toggle') as HTMLButtonElement | null;
+    if (toggle?.dataset.initBound) return;
+    if (toggle) toggle.dataset.initBound = '1';
+
+    // ---------- 标签折叠 / 展开 ----------
+    const toggleText = document.getElementById('tag-toggle-text');
+    toggle?.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      document.getElementById('tag-chips')?.classList.toggle('is-expanded', !expanded);
+      const count = toggle.dataset.count ?? '';
+      if (toggleText) toggleText.textContent = expanded ? `展开其余 ${count} 个` : '收起';
+    });
+
+    // ---------- 分类 / 标签点击就地筛选 ----------
+    const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip[data-filter]')];
+    const items = [...document.querySelectorAll<HTMLElement>('.archive-item')];
+    const status = document.getElementById('filter-status');
+    const statusText = document.getElementById('filter-status-text');
+    const clearBtn = document.getElementById('filter-clear');
+    const empty = document.getElementById('archive-empty');
+
+    let active: { type: string; value: string } | null = null;
+
+    function apply() {
+      let visible = 0;
+      for (const it of items) {
+        let hit = true;
+        if (active) {
+          hit =
+            active.type === 'cat'
+              ? (it.dataset.category ?? '') === active.value
+              : (it.dataset.tags ?? '').split(/\s+/).includes(active.value);
+        }
+        it.hidden = !hit;
+        if (hit) visible++;
+      }
+      for (const c of chips) {
+        c.classList.toggle(
+          'is-active',
+          !!active && c.dataset.filter === active.type && c.dataset.value === active.value
+        );
+      }
+      if (status) status.hidden = !active;
+      if (statusText && active) {
+        statusText.textContent = `${active.type === 'cat' ? '分类' : '标签'}：${active.value} · ${visible} 篇`;
+      }
+      if (empty) empty.hidden = visible > 0;
+    }
+
+    for (const c of chips) {
+      c.addEventListener('click', () => {
+        const type = c.dataset.filter!;
+        const value = c.dataset.value!;
+        if (active && active.type === type && active.value === value) active = null;
+        else active = { type, value };
+        apply();
+      });
+    }
+    clearBtn?.addEventListener('click', () => {
+      active = null;
+      apply();
+    });
+  }
+
+  initNotesPage();
+  document.addEventListener('astro:page-load', initNotesPage);
+</script>

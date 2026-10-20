@@ -1,0 +1,83 @@
+---
+import type { Page } from '../lib/paginate';
+
+interface Props {
+  page: Page<unknown>;
+  base: string;
+}
+
+const { page, base } = Astro.props;
+const nums = Array.from({ length: page.lastPage }, (_, i) => i + 1);
+const pageUrl = (n: number) => (n === 1 ? base : `${base}/page/${n}`);
+---
+
+{
+  page.lastPage > 1 && (
+    <nav class="pagination" aria-label="分页导航">
+      {page.url.prev ? (
+        <a class="pg pg--nav" href={page.url.prev}>← 上一页</a>
+      ) : (
+        <span class="pg pg--nav pg--disabled">← 上一页</span>
+      )}
+
+      <div class="pg-nums">
+        {nums.map((n) =>
+          n === page.currentPage ? (
+            <span class="pg-num is-active" aria-current="page">{n}</span>
+          ) : (
+            <a class="pg-num" href={pageUrl(n)}>{n}</a>
+          )
+        )}
+      </div>
+
+      {page.url.next ? (
+        <a class="pg pg--nav" href={page.url.next}>下一页 →</a>
+      ) : (
+        <span class="pg pg--nav pg--disabled">下一页 →</span>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 2.4rem;
+  }
+  .pg {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.9rem;
+    transition: border-color var(--transition), color var(--transition);
+  }
+  .pg--nav:hover { color: var(--brand); border-color: var(--brand); }
+  .pg--disabled { opacity: 0.4; pointer-events: none; }
+  .pg-nums { display: flex; gap: 0.35rem; }
+  .pg-num {
+    min-width: 2.1rem;
+    height: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-soft);
+    font-size: 0.9rem;
+  }
+  .pg-num:hover { color: var(--brand); border-color: var(--brand); }
+  .pg-num.is-active {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+  }
+</style>

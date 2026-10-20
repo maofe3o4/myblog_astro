@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostIndex from '../../components/PostIndex.astro';
+import { getPosts, getAllTags, slugifyTag } from '../../lib/posts';
+import { paginate } from '../../lib/paginate';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = await getAllTags();
+  return tags.map((tag) => {
+    const slug = slugifyTag(tag);
+    const base = `/tags/${slug}`;
+    const { props } = paginate(
+      posts.filter((p) => p.data.tags.includes(tag)),
+      { pageSize: 5, base, params: { tag: slug } }
+    )[0];
+    return { params: { tag: slug }, props: { tag, ...props } };
+  });
+}
+
+const { page } = Astro.props;
+const tag = (Astro.props as { tag: string }).tag;
+const slug = Astro.params.tag!;
+---
+
+<BaseLayout title={`标签：${tag}`} description={`标签「${tag}」下的文章，共 ${page.total} 篇`}>
+  <PostIndex page={page} title={`标签：${tag}`} description={`${page.total} 篇文章`} base={`/tags/${slug}`} />
+</BaseLayout>

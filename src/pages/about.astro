@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../site.config';
+---
+
+<BaseLayout title="关于" description={`关于 ${SITE.name}`} narrow>
+  <div class="page-head">
+    <h1>关于 {SITE.name}</h1>
+  </div>
+
+  <div class="prose">
+    <p>
+      {SITE.name}（{SITE.nameEn}）是一个使用 <strong>Astro</strong> 构建的极简博客，
+      主题以动漫角色「小鸟游六花」为灵感。视觉上取「邪王真眼」的苍蓝辉光为主色，
+      辅以缎带金与魔法紫，并以「六」的数字母题延伸出六色星辉用于区分文章标签。
+    </p>
+    <p>
+      本站已具备：文章列表与详情、随笔（按时间归档）与笔记（按分类归档）、
+      标签归档、客户端全文搜索、分页、精选栏、文章封面与明暗双主题。
+      后续可继续加入 RSS 订阅、评论、阅读量统计等能力。
+    </p>
+    <h2>技术栈</h2>
+    <ul>
+      <li><strong>Astro 5</strong> —— 内容驱动的静态站点生成</li>
+      <li><strong>Content Collections</strong> —— 类型安全的 Markdown 文章管理</li>
+      <li><strong>原生 CSS 变量</strong> —— 零依赖的主题系统</li>
+    </ul>
+    <h2>联系</h2>
+    <p>
+      欢迎通过
+      <a href={SITE.links.email}>邮件</a> 或
+      <a href={SITE.links.github} target="_blank" rel="noopener">GitHub</a>
+      与我交流。
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-head { margin-bottom: 1.4rem; }
+</style>

@@ -1,0 +1,384 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { render } from 'astro:content';
+import { getPosts, getEssays, getNotes, slugifyTag } from '../../lib/posts';
+import Cover from '../../components/Cover.astro';
+import { TYPE_LABEL } from '../../site.config';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const { title, description, pubDate, updatedDate, tags = [], type, category } = entry.data;
+
+const dateStr = pubDate.toLocaleDateString('zh-CN', {
+  year: 'numeric', month: 'long', day: 'numeric',
+});
+const updatedStr = updatedDate?.toLocaleDateString('zh-CN', {
+  year: 'numeric', month: 'long', day: 'numeric',
+});
+
+// 左侧目录：与当前文章同类型的全部文章，按时间倒序
+const siblings = (type === 'note' ? await getNotes() : await getEssays());
+const siblingLabel = TYPE_LABEL[type];
+// 右侧目录：取正文二级、三级标题，二级用中文序号
+const rawOutline = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
+const ZH = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五'];
+let h2Idx = 0;
+const outline = rawOutline.map((h) => {
+  if (h.depth === 2) return { ...h, num: ZH[h2Idx++] ?? String(h2Idx) };
+  return { ...h, num: '' };
+});
+---
+
+<BaseLayout title={title} description={description} wide>
+  <div class="doc">
+    <aside class="doc__aside doc__aside--left">
+      <p class="doc__aside-title">全部{siblingLabel}</p>
+      <input id="doc-filter" class="doc-filter" type="search" placeholder="筛选文章…" autocomplete="off" aria-label="筛选文章列表" />
+      <nav class="doc__index" id="doc-index">
+        {siblings.map((s) => (
+          <a
+            href={`/blog/${s.id}/`}
+            class:list={['doc__index-link', s.id === entry.id && 'is-current']}
+          >
+            {s.data.title}
+            <span class="doc__index-date">{s.data.pubDate.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}</span>
+          </a>
+        ))}
+      </nav>
+      <p class="doc__no-match" id="doc-no-match" hidden>没有匹配的文章</p>
+    </aside>
+
+    <article class="post doc__main">
+      <Cover entry={entry} variant="banner" />
+      <header class="post__header">
+        <div class="post__meta">
+          <span class="post__type">{TYPE_LABEL[type]}</span>
+          {category && <span class="post__cat">· {category}</span>}
+          <time datetime={pubDate.toISOString()}>· {dateStr}</time>
+          {updatedStr && <span class="post__updated">· 更新于 {updatedStr}</span>}
+        </div>
+        <h1 class="post__title">{title}</h1>
+        {description && <p class="post__desc soft">{description}</p>}
+        {tags.length > 0 && (
+          <div class="post__tags">
+            {tags.map((t, i) => (
+              <a href={`/tags/${slugifyTag(t)}/`} class="tag" data-index={i % 6}>{t}</a>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <div class="prose">
+        <Content />
+      </div>
+
+      <footer class="post__footer">
+        <a href="/blog" class="btn">← 返回文章列表</a>
+      </footer>
+    </article>
+
+    {outline.length > 0 && (
+      <aside class="doc__aside doc__aside--right">
+        <p class="doc__aside-title">目录</p>
+        <nav class="doc__outline" id="doc-outline">
+          {outline.map((h) => (
+            <a
+              href={`#${h.slug}`}
+              class:list={['doc__outline-link', h.depth === 2 ? 'lvl-2' : 'lvl-3']}
+              data-target={h.slug}
+            >
+              {h.num && <span class="doc__outline-num">{h.num}、</span>}{h.text}
+            </a>
+          ))}
+        </nav>
+      </aside>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .post__header { margin-bottom: 2rem; }
+  .post > :global(.cover--banner) { margin-bottom: 1.8rem; border-radius: var(--radius-lg); }
+  .post__meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+  .post__type { font-weight: 700; color: var(--brand); }
+  .post__cat { font-weight: 600; }
+  .post__updated { margin-left: 0.2rem; }
+  .post__title { margin: 0 0 0.6rem; }
+  .post__desc { font-size: 1.05rem; margin: 0 0 1rem; }
+  .post__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+  /* 正文阅读体验：放宽字号、行高与段距 */
+  .prose {
+    font-size: 1.05rem;
+    line-height: 1.85;
+  }
+  .prose :global(p) { margin: 1.1em 0; }
+  .prose :global(blockquote) {
+    margin: 1.4em 0;
+    padding: 0.4em 1.1em;
+    border-left: 3px solid var(--brand);
+    background: var(--brand-soft);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--text-soft);
+  }
+  .post__footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* 正文排版：h2 用强调竖条（参考文档站样式） */
+  .prose :global(h2) {
+    margin-top: 2em;
+    padding-top: 0;
+    border-top: none;
+    position: relative;
+    padding-left: 0.7em;
+    scroll-margin-top: calc(var(--header-h) + 1.2rem);
+  }
+  .prose :global(h2)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.14em;
+    bottom: 0.14em;
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--brand), var(--c3));
+  }
+  .prose :global(h3) { scroll-margin-top: calc(var(--header-h) + 1.2rem); }
+  .prose :global(img) {
+    border-radius: var(--radius-sm);
+    margin: 1.5em auto;
+    box-shadow: var(--shadow-sm);
+  }
+  .prose :global(ul), .prose :global(ol) { padding-left: 1.4em; }
+  .prose :global(li) { margin: 0.3em 0; }
+
+  /* 代码块复制按钮 */
+  .prose :global(pre) { position: relative; }
+  .prose :global(.copy-btn) {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.18rem 0.6rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+    color: var(--text-soft);
+    background: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--transition), color var(--transition);
+  }
+  .prose :global(pre:hover .copy-btn),
+  .prose :global(.copy-btn:focus-visible) { opacity: 1; }
+  .prose :global(.copy-btn:hover) { color: var(--brand); border-color: var(--brand); }
+
+  /* ---------- 文档式三栏（加宽阅读区） ---------- */
+  .doc {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 220px;
+    gap: 2.4rem;
+    align-items: start;
+    margin-top: 1.5rem;
+  }
+  .doc__main { grid-column: 2; min-width: 0; }
+  .doc__aside {
+    position: sticky;
+    top: calc(var(--header-h) + 1.2rem);
+    max-height: calc(100vh - var(--header-h) - 2.4rem);
+    overflow-y: auto;
+    padding: 0.2rem 0.2rem 1rem;
+  }
+  .doc__aside--left { grid-column: 1; }
+  .doc__aside--right { grid-column: 3; }
+  .doc__aside-title {
+    font-family: var(--font-serif);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 左：筛选框 + 同类型全部文章目录 */
+  .doc-filter {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.42rem 0.7rem;
+    margin-bottom: 0.7rem;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .doc-filter::placeholder { color: var(--text-muted); }
+  .doc-filter:focus { border-color: var(--brand); }
+  .doc__index { display: flex; flex-direction: column; gap: 0.15rem; }
+  .doc__index-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    transition: color var(--transition), background var(--transition);
+  }
+  .doc__index-link:hover { color: var(--text); background: var(--surface-2); }
+  .doc__index-link.is-current {
+    color: var(--brand);
+    background: var(--brand-soft);
+    font-weight: 600;
+  }
+  .doc__index-date { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+  .doc__no-match { font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0 0; }
+
+  /* 右：当前文章目录（编号 + 滚动高亮） */
+  .doc__outline { display: flex; flex-direction: column; gap: 0.1rem; border-left: 2px solid var(--border); }
+  .doc__outline-link {
+    padding: 0.28rem 0.7rem;
+    color: var(--text-soft);
+    font-size: 0.86rem;
+    line-height: 1.45;
+    border-left: 2px solid transparent;
+    margin-left: -2px;
+    transition: color var(--transition), border-color var(--transition);
+  }
+  .doc__outline-link:hover { color: var(--text); }
+  .doc__outline-link.is-active {
+    color: var(--brand);
+    border-left-color: var(--brand);
+    font-weight: 600;
+  }
+  .doc__outline-num { font-weight: 700; margin-right: 0.1em; }
+  .doc__outline-link.lvl-3 { padding-left: 1.6rem; font-size: 0.82rem; }
+
+  /* 响应式：先收左栏，再收右栏 */
+  @media (max-width: 1180px) {
+    .doc { grid-template-columns: minmax(0, 1fr) 210px; }
+    .doc__aside--left { display: none; }
+    .doc__main { grid-column: 1; }
+    .doc__aside--right { grid-column: 2; }
+  }
+  @media (max-width: 760px) {
+    .doc { grid-template-columns: minmax(0, 1fr); }
+    .doc__main { grid-column: 1; }
+    .doc__aside--right { display: none; }
+  }
+</style>
+
+<script>
+  // 支持视图过渡导航：每次页面加载（含 astro:page-load）都重新绑定
+  // ClientRouter 会在首次加载时也触发 astro:page-load（叠加直接执行），
+  // 因此重入时先中止上一轮的全部监听器，避免重复绑定。
+  let docPageAc: AbortController | undefined;
+  function initDocPage() {
+    docPageAc?.abort();
+    docPageAc = new AbortController();
+    const { signal } = docPageAc;
+
+    // ---------- 左栏：文章列表筛选 ----------
+    const filterInput = document.getElementById('doc-filter') as HTMLInputElement | null;
+    const indexLinks = [...document.querySelectorAll<HTMLElement>('.doc__index-link')];
+    const noMatch = document.getElementById('doc-no-match');
+    filterInput?.addEventListener(
+      'input',
+      () => {
+        const q = filterInput.value.trim().toLowerCase();
+        let visible = 0;
+        for (const l of indexLinks) {
+          const hit = !q || (l.textContent ?? '').toLowerCase().includes(q);
+          l.hidden = !hit;
+          if (hit) visible++;
+        }
+        if (noMatch) noMatch.hidden = visible > 0;
+      },
+      { signal }
+    );
+
+    // ---------- 右栏：目录滚动高亮 ----------
+    const outlineLinks = [...document.querySelectorAll<HTMLAnchorElement>('.doc__outline-link')];
+    if (outlineLinks.length > 0) {
+      const targets = outlineLinks
+        .map((l) => document.getElementById(l.dataset.target ?? ''))
+        .filter((el): el is HTMLElement => !!el);
+
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        const offset = 130;
+        let current: HTMLElement | null = null;
+        for (const el of targets) {
+          if (el.getBoundingClientRect().top <= offset) current = el;
+        }
+        for (const l of outlineLinks) {
+          l.classList.toggle('is-active', !!current && l.dataset.target === current.id);
+        }
+      };
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        },
+        { passive: true, signal }
+      );
+      update();
+    }
+
+    // ---------- 代码块复制按钮 ----------
+    for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre')) {
+      if (pre.querySelector(':scope > .copy-btn')) continue;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy-btn';
+      btn.textContent = '复制';
+      btn.addEventListener(
+        'click',
+        async () => {
+          const code = pre.querySelector('code')?.innerText ?? pre.innerText;
+          try {
+            await navigator.clipboard.writeText(code);
+            btn.textContent = '已复制';
+          } catch {
+            btn.textContent = '复制失败';
+          }
+          setTimeout(() => (btn.textContent = '复制'), 1600);
+        },
+        { signal }
+      );
+      pre.appendChild(btn);
+    }
+  }
+
+  initDocPage();
+  document.addEventListener('astro:page-load', initDocPage);
+</script>

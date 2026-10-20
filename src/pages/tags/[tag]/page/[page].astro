@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import PostIndex from '../../../../components/PostIndex.astro';
+import { getPosts, getAllTags, slugifyTag } from '../../../../lib/posts';
+import { paginate } from '../../../../lib/paginate';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = await getAllTags();
+  return tags.flatMap((tag) => {
+    const slug = slugifyTag(tag);
+    const base = `/tags/${slug}`;
+    const pages = paginate(
+      posts.filter((p) => p.data.tags.includes(tag)),
+      { pageSize: 5, base, params: { tag: slug } }
+    );
+    return pages
+      .filter((p) => p.params.page !== undefined)
+      .map(({ params, props }) => ({ params, props: { tag, ...props } }));
+  });
+}
+
+const { page } = Astro.props;
+const tag = (Astro.props as { tag: string }).tag;
+const slug = Astro.params.tag!;
+const base = `/tags/${slug}`;
+---
+
+<BaseLayout title={`标签：${tag} · 第 ${page.currentPage} 页`} description={`标签「${tag}」下的文章，第 ${page.currentPage} / ${page.lastPage} 页`}>
+  <PostIndex page={page} title={`标签：${tag}`} description={`${page.total} 篇文章 · 第 ${page.currentPage} / ${page.lastPage} 页`} base={base} />
+</BaseLayout>

@@ -1,0 +1,105 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MusicPlayer from '../components/MusicPlayer.astro';
+import AnimeBackground from '../components/AnimeBackground.astro';
+import { ClientRouter } from 'astro:transitions';
+import { SITE } from '../site.config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 文章页等需要更窄阅读宽度的页面 */
+  narrow?: boolean;
+  /** 文档式三栏等需要更宽工作区的页面 */
+  wide?: boolean;
+}
+
+const { title, description = SITE.description, narrow = false, wide = false } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.nameEn}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta name="twitter:card" content="summary" />
+
+    <!-- 视图过渡导航：切换页面不重建 DOM，音乐播放不中断 -->
+    <ClientRouter />
+
+    <!-- 主题/文字风格/主色初始化：首屏绘制前确定；视图过渡导航后强制恢复，防止重置 -->
+    <script is:inline>
+      (function () {
+        function applyLook() {
+          // 主题
+          try {
+            var stored = localStorage.getItem('sf-theme');
+            var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+          } catch (e) {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+          // 文字风格 / 主色色相（默认 serif / 211）
+          try {
+            var s = JSON.parse(localStorage.getItem('sf-settings') || '{}');
+            document.documentElement.setAttribute('data-font', s.fontStyle === 'sans' ? 'sans' : 'serif');
+            var hue = (typeof s.accentHue === 'number' && s.accentHue >= 0 && s.accentHue <= 360) ? s.accentHue : 211;
+            document.documentElement.style.setProperty('--accent-hue', String(hue));
+          } catch (e) {}
+        }
+        applyLook();
+        // ClientRouter 导航会重建 <head>，inline 脚本不会可靠地重新执行，
+        // 因此在 astro 生命周期事件里兜底恢复
+        document.addEventListener('astro:after-swap', applyLook);
+        document.addEventListener('astro:page-load', applyLook);
+      })();
+    </script>
+
+    <!-- 错峰入场：任意元素的 .reveal 在进入视口时加 is-visible；重入先中止旧观察器 -->
+    <script>
+      let revealAc;
+      function initReveal() {
+        if (revealAc) revealAc.abort();
+        revealAc = new AbortController();
+        const els = Array.from(document.querySelectorAll('.reveal'));
+        const show = (el) => el.classList.add('is-visible');
+        if (!('IntersectionObserver' in window)) { els.forEach(show); return; }
+        const io = new IntersectionObserver(
+          (entries) => entries.forEach((en) => {
+            if (en.isIntersecting) { show(en.target); io.unobserve(en.target); }
+          }),
+          { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+        );
+        els.forEach((el) => io.observe(el));
+        // 兜底：防止任何元素因未触发回调而始终不可见
+        setTimeout(() => els.forEach(show), 1400);
+      }
+      initReveal();
+      document.addEventListener('astro:page-load', initReveal);
+    </script>
+  </head>
+  <body>
+    <AnimeBackground />
+    <Header />
+    <main id="main" class="container" class:list={[narrow && 'container--narrow', wide && 'container--wide']}>
+      <slot />
+    </main>
+    <Footer />
+    <MusicPlayer />
+  </body>
+</html>

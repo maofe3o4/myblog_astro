@@ -1,0 +1,341 @@
+---
+import { SETTINGS_DEFAULTS } from '../site.config';
+---
+
+{/* 设置入口：齿轮按钮 + 下拉面板（设置项持久化在 localStorage） */}
+<div class="settings" id="settings">
+  <button
+    id="settings-toggle"
+    class="icon-btn"
+    type="button"
+    aria-label="打开设置面板"
+    title="设置"
+    aria-expanded="false"
+    aria-controls="settings-panel"
+  >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.08a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.08a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.08a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  </button>
+
+  <div id="settings-panel" class="settings__panel" role="dialog" aria-label="设置面板" hidden>
+    <p class="settings__title">设置</p>
+
+    {/* 头像悬停文字 */}
+    <div class="settings__row">
+      <label class="settings__label" for="settings-tip">头像悬停文字</label>
+      <input
+        id="settings-tip"
+        class="settings__input"
+        type="text"
+        maxlength="60"
+        placeholder={SETTINGS_DEFAULTS.avatarTip}
+      />
+    </div>
+
+    {/* 文字风格 */}
+    <div class="settings__row settings__row--seg">
+      <span class="settings__label">文字风格</span>
+      <div class="seg" id="settings-font" role="group" aria-label="文字风格">
+        <button class="seg__btn" type="button" data-val="serif">衬线</button>
+        <button class="seg__btn" type="button" data-val="sans">无衬线</button>
+      </div>
+    </div>
+
+    {/* 主题主色色相：0~360 调色盘 */}
+    <div class="settings__row settings__row--range" id="settings-hue-row">
+      <label class="settings__label" for="settings-hue">
+        颜色 <span class="settings__swatch" id="settings-hue-swatch"></span>
+        <span class="settings__hint" id="settings-hue-hint">211</span>
+      </label>
+      <input id="settings-hue" class="range range--hue" type="range" min="0" max="360" step="1" value="211" aria-label="主题主色色相" />
+    </div>
+
+    {/* 下雨特效 */}
+    <div class="settings__row settings__row--switch">
+      <span class="settings__label">下雨特效</span>
+      <button id="settings-rain" class="switch" type="button" role="switch" aria-checked="true" aria-label="下雨特效开关">
+        <span class="switch__knob"></span>
+      </button>
+    </div>
+
+    {/* 特效强度 */}
+    <div class="settings__row settings__row--range" id="settings-intensity-row">
+      <label class="settings__label" for="settings-intensity">
+        特效强度 <span class="settings__hint" id="settings-intensity-hint">3</span>
+      </label>
+      <input id="settings-intensity" class="range" type="range" min="1" max="5" step="1" value="3" aria-label="特效强度" />
+    </div>
+
+    <p class="settings__more">设置实时生效并自动保存</p>
+  </div>
+</div>
+
+<style>
+  .settings { position: relative; }
+
+  /* 下拉面板 */
+  .settings__panel {
+    position: absolute;
+    top: calc(100% + 0.7rem);
+    right: 0;
+    width: min(84vw, 260px);
+    padding: 0.85rem 1rem 0.95rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 16px 40px rgba(15, 12, 40, 0.22);
+    z-index: 70;
+    transform-origin: top right;
+    animation: settings-pop 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
+  }
+  @keyframes settings-pop {
+    from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .settings__title {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .settings__row { margin-bottom: 0.75rem; }
+  .settings__row--switch { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
+  .settings__row--seg { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
+
+  /* 分段选择器（文字风格 / 颜色） */
+  .seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+  .seg__btn {
+    border: none;
+    background: transparent;
+    color: var(--text-soft);
+    font: inherit;
+    font-size: 0.82rem;
+    padding: 0.26rem 0.7rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  .seg__btn:hover { color: var(--text); }
+  .seg__btn.is-active {
+    background: var(--brand);
+    color: #fff;
+    font-weight: 600;
+  }
+  .settings__row--range.is-off { opacity: 0.45; pointer-events: none; }
+  .settings__label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    margin-bottom: 0.35rem;
+  }
+  .settings__row--switch .settings__label { margin-bottom: 0; }
+  .settings__hint {
+    min-width: 2.4em;
+    text-align: center;
+    font-weight: 700;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+  }
+  /* 色相色块（实时跟随 --accent-hue） */
+  .settings__swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: hsl(var(--accent-hue, 211) 62% 53%);
+    display: inline-block;
+    vertical-align: -2px;
+  }
+  /* 色相滑块：彩虹轨道（双 class 提特异性，覆盖 .range 的主题色填充背景） */
+  .range.range--hue {
+    background: linear-gradient(
+      90deg,
+      hsl(0 70% 55%), hsl(60 70% 55%), hsl(120 70% 55%), hsl(180 70% 55%),
+      hsl(240 70% 55%), hsl(300 70% 55%), hsl(360 70% 55%)
+    );
+  }
+  .range.range--hue::-webkit-slider-thumb {
+    background: hsl(var(--accent-hue, 211) 62% 53%);
+  }
+  .range.range--hue::-moz-range-thumb {
+    background: hsl(var(--accent-hue, 211) 62% 53%);
+  }
+  .settings__input {
+    width: 100%;
+    height: 32px;
+    padding: 0 0.65rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .settings__input:focus { border-color: var(--brand); }
+
+  /* 开关 */
+  .switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--border-strong);
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .switch[aria-checked='true'] { background: var(--brand); }
+  .switch__knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .switch[aria-checked='true'] .switch__knob { transform: translateX(18px); }
+
+  /* 强度滑块 */
+  .range {
+    width: 100%;
+    height: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 999px;
+    background:
+      linear-gradient(var(--brand), var(--brand)) 0 / var(--fill, 50%) 100% no-repeat,
+      var(--border-strong);
+    outline: none;
+    cursor: pointer;
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--brand);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+  .range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--brand);
+    border: 2px solid #fff;
+  }
+  .settings__more {
+    margin: 0.2rem 0 0;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+</style>
+
+<script>
+  import { loadSettings, saveSettings } from '../lib/settings';
+
+  const root = document.getElementById('settings');
+  const toggle = document.getElementById('settings-toggle');
+  const panel = document.getElementById('settings-panel');
+  const tipInput = document.getElementById('settings-tip') as HTMLInputElement | null;
+  const rainBtn = document.getElementById('settings-rain');
+  const intensityInput = document.getElementById('settings-intensity') as HTMLInputElement | null;
+  const intensityRow = document.getElementById('settings-intensity-row');
+  const intensityHint = document.getElementById('settings-intensity-hint');
+  const fontSeg = document.getElementById('settings-font');
+  const hueInput = document.getElementById('settings-hue') as HTMLInputElement | null;
+  const hueHint = document.getElementById('settings-hue-hint');
+
+  if (root && toggle && panel && rainBtn && intensityInput && intensityRow && intensityHint && fontSeg && hueInput && hueHint) {
+    const state = loadSettings();
+
+    const fill = (el: HTMLInputElement) => {
+      const mn = Number(el.min), mx = Number(el.max);
+      el.style.setProperty('--fill', `${((Number(el.value) - mn) / (mx - mn)) * 100}%`);
+    };
+
+    const setSeg = (seg: HTMLElement, val: string) => {
+      seg.querySelectorAll<HTMLButtonElement>('.seg__btn').forEach((b) =>
+        b.classList.toggle('is-active', b.dataset.val === val)
+      );
+    };
+
+    const syncUI = (s: ReturnType<typeof loadSettings>) => {
+      if (tipInput && document.activeElement !== tipInput) tipInput.value = s.avatarTip;
+      rainBtn.setAttribute('aria-checked', String(s.bgRain));
+      intensityInput.value = String(s.bgIntensity);
+      intensityHint.textContent = String(s.bgIntensity);
+      fill(intensityInput);
+      setSeg(fontSeg, s.fontStyle);
+      hueInput.value = String(s.accentHue);
+      hueHint.textContent = String(s.accentHue);
+    };
+    syncUI(state);
+
+    // 开合
+    const open = () => { panel.hidden = false; toggle.setAttribute('aria-expanded', 'true'); };
+    const shut = () => { panel.hidden = true; toggle.setAttribute('aria-expanded', 'false'); };
+    toggle.addEventListener('click', (e) => { e.stopPropagation(); panel.hidden ? open() : shut(); });
+    document.addEventListener('click', (e) => {
+      if (!panel.hidden && !root.contains(e.target as Node)) shut();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) shut(); });
+
+    // 各设置项
+    tipInput?.addEventListener('change', () => {
+      saveSettings({ avatarTip: tipInput.value.trim() || '邪王真眼，在此睁眼！' });
+    });
+    rainBtn.addEventListener('click', () => {
+      saveSettings({ bgRain: rainBtn.getAttribute('aria-checked') !== 'true' });
+    });
+    intensityInput.addEventListener('input', () => {
+      intensityHint.textContent = intensityInput.value;
+      fill(intensityInput);
+      saveSettings({ bgIntensity: Number(intensityInput.value) });
+    });
+
+    // 文字风格 / 颜色：分段选择器
+    fontSeg.querySelectorAll<HTMLButtonElement>('.seg__btn').forEach((b) =>
+      b.addEventListener('click', () => {
+        const val = b.dataset.val === 'sans' ? 'sans' : 'serif';
+        document.documentElement.setAttribute('data-font', val);
+        saveSettings({ fontStyle: val });
+      })
+    );
+    // 主题主色色相：0~360 调色盘
+    const applyHue = () => {
+      const h = Number(hueInput.value);
+      document.documentElement.style.setProperty('--accent-hue', String(h));
+      hueHint.textContent = String(h);
+    };
+    hueInput.addEventListener('input', () => {
+      applyHue();
+      saveSettings({ accentHue: Number(hueInput.value) });
+    });
+
+    // 跨组件同步（背景组件触发变更时回填 UI）
+    window.addEventListener('sf-settings-change', (e) => {
+      syncUI((e as CustomEvent<ReturnType<typeof loadSettings>>).detail);
+    });
+  }
+</script>

@@ -1,0 +1,45 @@
+---
+import { SITE } from '../site.config';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <div class="site-footer__brand">
+      <span class="site-footer__name">{SITE.name} · {SITE.nameEn}</span>
+      <p class="muted">{SITE.tagline}</p>
+    </div>
+    <div class="site-footer__meta">
+      <span class="muted">© {year} {SITE.author}</span>
+      <span class="muted">由 <a href="https://astro.build" target="_blank" rel="noopener">Astro</a> 驱动</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+  .site-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    padding-block: 2rem;
+  }
+  .site-footer__name { font-family: var(--font-serif); font-size: 1.1rem; }
+  .site-footer__brand p { margin: 0.3rem 0 0; font-size: 0.9rem; }
+  .site-footer__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    text-align: right;
+  }
+  @media (max-width: 560px) {
+    .site-footer__meta { text-align: left; }
+  }
+</style>

@@ -1,0 +1,104 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { TYPE_LABEL } from '../site.config';
+import { tagColorIndex } from '../lib/posts';
+import Cover from './Cover.astro';
+
+interface Props {
+  entry: CollectionEntry<'blog'>;
+  /** 是否在卡片上展示类型徽标（随笔 / 笔记） */
+  showType?: boolean;
+  /** 列表中的序号，用于错峰入场动画（可选） */
+  index?: number;
+}
+
+const { entry, showType = true, index } = Astro.props;
+const { title, description, pubDate, tags = [], type, featured } = entry.data;
+const href = `/blog/${entry.id}/`;
+
+const dateStr = pubDate.toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<article class:list={['post-card', 'reveal', featured && 'post-card--featured']} style={index !== undefined ? `--i:${index % 12}` : undefined}>
+  <a href={href} class="post-card__link">
+    <div class="post-card__cover">
+      <Cover entry={entry} />
+      {featured && <span class="post-card__badge">✦ 精选</span>}
+      {showType && <span class="post-card__type">{TYPE_LABEL[type]}</span>}
+    </div>
+    <div class="post-card__body">
+      <div class="post-card__head">
+        <time datetime={pubDate.toISOString()} class="post-card__date">{dateStr}</time>
+      </div>
+      <h2 class="post-card__title">{title}</h2>
+      {description && <p class="post-card__desc soft">{description}</p>}
+      <div class="post-card__tags">
+        {tags.map((t) => (
+          <span class="tag" data-index={(tagColorIndex(t) - 1)}>{t}</span>
+        ))}
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .post-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  }
+  .post-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: var(--border-strong);
+  }
+  .post-card--featured {
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 18%, transparent);
+  }
+  .post-card__link { color: inherit; display: block; }
+  .post-card__link:hover { color: inherit; }
+  .post-card__cover { position: relative; overflow: hidden; }
+  .post-card__cover .cover { transition: transform var(--transition); }
+  .post-card:hover .post-card__cover .cover { transform: scale(1.05); }
+  .post-card__badge {
+    position: absolute;
+    top: 0.7rem;
+    left: 0.7rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--brand);
+    box-shadow: var(--shadow-sm);
+  }
+  .post-card__type {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(20, 18, 42, 0.55);
+    backdrop-filter: blur(4px);
+  }
+  .post-card__body { padding: 1.1rem 1.3rem 1.3rem; }
+  .post-card__head { margin-bottom: 0.4rem; }
+  .post-card__date {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+  .post-card__title { font-size: 1.3rem; margin: 0.1rem 0 0.5rem; }
+  .post-card__desc { margin: 0 0 0.9rem; font-size: 0.96rem; }
+  .post-card__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+</style>

@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PostCard from '../../../components/PostCard.astro';
+import { getCategories, getNotesByCategory } from '../../../lib/posts';
+
+export async function getStaticPaths() {
+  const categories = await getCategories();
+  return categories.map((category) => ({ params: { category } }));
+}
+
+const { category } = Astro.params;
+const notes = await getNotesByCategory(decodeURIComponent(category!));
+---
+
+<BaseLayout title={`分类：${category}`} description={`分类「${category}」下的笔记，共 ${notes.length} 篇`}>
+  <div class="page-head">
+    <h1>分类：{category}</h1>
+    <p class="muted">{notes.length} 篇笔记</p>
+  </div>
+  <div class="post-grid">
+    {notes.map((post) => <PostCard entry={post} />)}
+  </div>
+</BaseLayout>
+
+<style>
+  .page-head { margin-bottom: 1.6rem; }
+  .post-grid {
+    display: grid;
+    gap: 1.1rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+</style>

@@ -1,0 +1,495 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Cover from '../components/Cover.astro';
+import { SITE, PROFILE } from '../site.config';
+import { getFeatured, getPosts } from '../lib/posts';
+
+const featured = await getFeatured();
+const [main, ...rest] = featured;
+const side = rest.slice(0, 4);
+
+const allPosts = await getPosts();
+const latest = allPosts.slice(0, 7);
+const fmtFull = (d: Date) =>
+  d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const ICONS: Record<string, string> = {
+  github: '<svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12.3c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.6-3.9-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.6 4.4 18.6 4.7 18.6 4.7c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6a11.6 11.6 0 0 0 7.9-10.9A11.5 11.5 0 0 0 12 .5z"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  bilibili: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="m7.5 3.5 2.5 3.5M16.5 3.5 14 7"/><path d="M9 12v2.5M15 12v2.5"/></svg>',
+  twitter: '<svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M21.6 3h-3.4l-4.2 5.6L8.9 3H3l7.3 9.5L3.4 21h3.5l4.6-6.1 4.4 6.1H21l-7.7-10.3L21.6 3z"/></svg>',
+  rss: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.6" fill="currentColor" stroke="none"/></svg>',
+};
+---
+
+<BaseLayout>
+  <!-- ============ Hero：左头像 + 右文案（紧凑横排，参照参考样式） ============ -->
+  <section class="hero">
+    <div class="hero__inner">
+      <div class="hero__avatar">
+        <a href="/about" class="avatar" aria-label={PROFILE.nickname}>
+          <img src={PROFILE.avatar} alt={PROFILE.nickname} width="96" height="96" />
+          <span class="avatar__ring" aria-hidden="true"></span>
+        </a>
+        {/* 悬停头像时显示的文字（内容来自设置面板，运行时注入） */}
+        <span class="avatar__tip" id="avatar-tip" hidden>邪王真眼，在此睁眼！</span>
+      </div>
+
+      <div class="hero__text">
+        <p class="hero__eyebrow">{PROFILE.eyebrow}</p>
+        <h1 class="hero__title">{SITE.name}</h1>
+        <p class="hero__tagline">{PROFILE.signature}</p>
+        <div class="hero__actions">
+          <nav class="hero__links" aria-label="外链">
+            {PROFILE.links.map((l) => (
+              <a href={l.href} class="hero__link" title={l.label} aria-label={l.label} target="_blank" rel="noopener">
+                <span set:html={ICONS[l.icon] ?? ICONS.github} />
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="home-sheet">
+    {main && (
+      <section class="block reveal">
+        <div class="section-head">
+          <h2>✦ 精选</h2>
+        <a href="/blog" class="section-head__more">全部文章 →</a>
+      </div>
+      <div class="featured">
+        <a href={`/blog/${main.id}/`} class="featured__main">
+          <div class="featured__cover"><Cover entry={main} variant="banner" /></div>
+          <p class="featured__meta">
+            {main.data.category && <span class="featured__cat">{main.data.category}</span>}
+            <time datetime={main.data.pubDate.toISOString()}>{fmtFull(main.data.pubDate)}</time>
+          </p>
+          <h3 class="featured__title">{main.data.title}</h3>
+          {main.data.description && <p class="featured__desc soft">{main.data.description}</p>}
+        </a>
+        {side.length > 0 && (
+          <div class="featured__side">
+            {side.map((post) => (
+              <a href={`/blog/${post.id}/`} class="featured-item">
+                <div class="featured-item__thumb"><Cover entry={post} variant="thumb" /></div>
+                <div class="featured-item__body">
+                  <span class="featured-item__title">{post.data.title}</span>
+                  <time class="featured-item__date" datetime={post.data.pubDate.toISOString()}>
+                    {fmtFull(post.data.pubDate)}
+                  </time>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )}
+
+  <section class="block reveal">
+    <div class="section-head">
+      <h2>最新文章</h2>
+      <a href="/blog" class="section-head__more">全部 {allPosts.length} 篇 →</a>
+    </div>
+    <ul class="post-list">
+      {latest.map((post) => {
+        const d = post.data.pubDate;
+        return (
+          <li class="post-row">
+            <a href={`/blog/${post.id}/`} class="post-row__link">
+              <div class="post-row__date">
+                <span class="post-row__md">{pad(d.getMonth() + 1)}-{pad(d.getDate())}</span>
+                <span class="post-row__y">{d.getFullYear()}</span>
+              </div>
+              <div class="post-row__body">
+                <span class="post-row__title">{post.data.title}</span>
+                {post.data.description && <span class="post-row__desc soft">{post.data.description}</span>}
+              </div>
+              {post.data.category && <span class="post-row__cat">{post.data.category}</span>}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+  </div>
+</BaseLayout>
+
+<style>
+  /* ---------- Hero：左头像 + 右文案，紧凑横排 ---------- */
+  .hero {
+    position: relative;
+    padding: clamp(1.75rem, 5vw, 3rem) 0 clamp(1.75rem, 3.5vw, 2.5rem);
+    overflow: hidden;
+  }
+  /* 夜空辉光（极轻，仅添一点氛围，不在背景上打出亮块） */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -18% -6% -6%;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 55% 60% at 30% 10%, color-mix(in srgb, var(--brand) 7%, transparent), transparent 70%),
+      radial-gradient(ellipse 40% 45% at 75% 30%, color-mix(in srgb, var(--c3) 5%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .hero__inner {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.2rem, 3.5vw, 2.2rem);
+  }
+  .hero__text { min-width: 0; }
+
+  /* 分层入场动画 */
+  .hero__avatar { animation: hero-in-left 0.7s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+  .hero__text > * { animation: hero-in 0.65s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+  .hero__text > *:nth-child(1) { animation-delay: 0.1s; }
+  .hero__text > *:nth-child(2) { animation-delay: 0.2s; }
+  .hero__text > *:nth-child(3) { animation-delay: 0.3s; }
+  .hero__text > *:nth-child(4) { animation-delay: 0.4s; }
+  @keyframes hero-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes hero-in-left {
+    from { opacity: 0; transform: translateX(-18px) scale(0.92); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero__avatar, .hero__text > * { animation: none; }
+  }
+
+  /* ---------- 头像（悬停显示设置中的文字） ---------- */
+  .hero__avatar {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .avatar {
+    position: relative;
+    display: block;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+  }
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid color-mix(in srgb, var(--border-strong) 60%, transparent);
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+  .avatar:hover img {
+    transform: scale(1.06);
+    box-shadow: 0 8px 28px color-mix(in srgb, var(--brand) 35%, transparent);
+  }
+  /* 外圈微光环 */
+  .avatar__ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed color-mix(in srgb, var(--brand) 40%, transparent);
+    animation: avatar-ring 14s linear infinite;
+  }
+  @keyframes avatar-ring { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar__ring { animation: none; }
+  }
+  .avatar__tip {
+    position: absolute;
+    top: calc(100% + 0.55rem);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 0.32rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: #ffe9c4;
+    background: rgba(30, 27, 56, 0.92);
+    border: 1px solid color-mix(in srgb, var(--c2) 45%, transparent);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 5;
+  }
+  .avatar__tip::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    transform: translateX(-50%) rotate(45deg);
+    background: inherit;
+    border-left: 1px solid color-mix(in srgb, var(--c2) 45%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--c2) 45%, transparent);
+  }
+  .hero__avatar:hover .avatar__tip,
+  .hero__avatar:focus-within .avatar__tip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(2px);
+  }
+
+  /* ---------- 文案区 ---------- */
+  .hero__eyebrow {
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--c2) 85%, var(--text));
+    margin: 0 0 0.35rem;
+  }
+  .hero__title {
+    font-size: clamp(2.2rem, 6.5vw, 3.4rem);
+    font-style: italic;
+    margin: 0 0 0.3rem;
+    letter-spacing: 0.01em;
+    background: linear-gradient(120deg, var(--c1), var(--c3) 45%, var(--c4));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero__tagline {
+    font-size: 1rem;
+    color: var(--text-soft);
+    margin: 0 0 1.1rem;
+    max-width: 44ch;
+  }
+  .hero__actions {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    flex-wrap: wrap;
+  }
+  /* ---------- 外链图标行 ---------- */
+  .hero__links {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .hero__link {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    transition: color var(--transition), border-color var(--transition), transform var(--transition), background var(--transition);
+  }
+  .hero__link:hover {
+    color: var(--brand);
+    border-color: color-mix(in srgb, var(--brand) 50%, transparent);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+  }
+
+  /* ---------- 嵌入式内容卡片：上移叠在背景横幅下沿（参照 Fuwari） ---------- */
+  .home-sheet {
+    position: relative;
+    z-index: 2;
+    /* 负上边距轻微上移叠住横幅下沿（嵌入感），负左右边距让卡片左右出血到容器边缘 */
+    margin: clamp(-1.25rem, -2vh, -0.5rem) calc(-1 * var(--space-page)) 0;
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem) 0;
+    background: var(--bg-elevated);
+    border-radius: 26px 26px 0 0;
+    box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.2);
+  }
+  .home-sheet > .block:first-child { margin-top: 0; }
+
+  .block { margin-top: 2rem; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+  .section-head h2 { margin: 0; font-size: 1.5rem; }
+  .section-head__more { font-size: 0.9rem; }
+
+  /* ---------- 滚动渐显 ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.22, 0.9, 0.3, 1);
+  }
+  .reveal.is-visible { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  /* ---------- 精选：左大卡 + 右侧列表 ---------- */
+  .featured {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 1.6rem;
+    align-items: stretch;
+  }
+  .featured__main { display: block; color: inherit; min-width: 0; }
+  .featured__cover :global(.cover) {
+    aspect-ratio: 16 / 9;
+    transition: transform var(--transition);
+  }
+  .featured__main:hover .featured__cover :global(.cover) { transform: scale(1.015); }
+  .featured__meta {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    margin: 0.8rem 0 0.3rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .featured__cat { font-weight: 700; color: var(--c2); }
+  .featured__title {
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    margin: 0 0 0.4rem;
+    line-height: 1.4;
+  }
+  .featured__main:hover .featured__title { color: var(--brand); }
+  .featured__desc {
+    margin: 0;
+    font-size: 0.95rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .featured__side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .featured-item {
+    flex: 1;
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 0.45rem 0.4rem;
+    border-radius: var(--radius);
+    color: inherit;
+    transition: background var(--transition);
+  }
+  .featured-item:hover { background: var(--surface-2); }
+  .featured-item__thumb { flex: 0 0 108px; }
+  .featured-item__body { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+  .featured-item__title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 0.98rem;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .featured-item:hover .featured-item__title { color: var(--brand); }
+  .featured-item__date { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* ---------- 最新文章：日期左 · 标题中 · 分类右 ---------- */
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .post-row + .post-row { border-top: 1px solid var(--border); }
+  .post-row__link {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    padding: 1rem 0.3rem;
+    color: inherit;
+    transition: background var(--transition);
+  }
+  .post-row__link:hover { color: inherit; }
+  .post-row__link:hover .post-row__title { color: var(--brand); }
+  .post-row__date {
+    flex: 0 0 3.6rem;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+  .post-row__md {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .post-row__y { font-size: 0.75rem; color: var(--text-muted); }
+  .post-row__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .post-row__title {
+    font-family: var(--font-serif);
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.45;
+    transition: color var(--transition);
+  }
+  .post-row__desc {
+    font-size: 0.88rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .post-row__cat {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--c2);
+  }
+  @media (max-width: 640px) {
+    .featured { grid-template-columns: 1fr; }
+    .post-row__link { gap: 0.9rem; }
+    .post-row__cat { display: none; }
+    .post-row__desc { display: none; }
+  }
+  @media (max-width: 480px) {
+    .hero__inner { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .hero__avatar { align-self: flex-start; }
+  }
+</style>
+
+<script>
+  import { loadSettings, SETTINGS_EVENT } from '../lib/settings';
+
+  // 支持视图过渡导航：每次页面加载（含 astro:page-load）都重新初始化
+  function initHomePage() {
+    // 头像悬停文字：跟随设置面板
+    const tip = document.getElementById('avatar-tip');
+    if (tip && !tip.dataset.bound) {
+      tip.dataset.bound = '1';
+      const sync = (text: string) => { tip.textContent = text || '邪王真眼，在此睁眼！'; };
+      sync(loadSettings().avatarTip);
+      window.addEventListener(SETTINGS_EVENT, (e) => {
+        sync((e as CustomEvent<{ avatarTip: string }>).detail.avatarTip);
+      });
+    }
+
+    // 滚动渐显
+    const reveals = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach((en) => {
+          if (en.isIntersecting) { en.target.classList.add('is-visible'); io.unobserve(en.target); }
+        }),
+        { threshold: 0.12 }
+      );
+      reveals.forEach((el) => io.observe(el));
+    } else {
+      reveals.forEach((el) => el.classList.add('is-visible'));
+    }
+  }
+
+  initHomePage();
+  document.addEventListener('astro:page-load', initHomePage);
+</script>

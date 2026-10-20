@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PostIndex from '../../../components/PostIndex.astro';
+import { getPosts } from '../../../lib/posts';
+import { paginate } from '../../../lib/paginate';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const pages = paginate(posts, { pageSize: 5, base: '/blog' });
+  return pages
+    .filter((p) => p.params.page !== undefined)
+    .map(({ params, props }) => ({ params, props }));
+}
+
+const { page } = Astro.props;
+---
+
+<BaseLayout title={`全部文章 · 第 ${page.currentPage} 页`} description={`全部文章，第 ${page.currentPage} / ${page.lastPage} 页`}>
+  <PostIndex page={page} title="全部文章" description={`共 ${page.total} 篇 · 第 ${page.currentPage} / ${page.lastPage} 页`} base="/blog" />
+</BaseLayout>

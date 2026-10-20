@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Cover from '../../components/Cover.astro';
+import { groupEssaysByMonth, tagColorIndex } from '../../lib/posts';
+import { TYPE_LABEL } from '../../site.config';
+
+const groups = await groupEssaysByMonth();
+const total = groups.reduce((s, g) => s + g.months.reduce((a, m) => a + m.posts.length, 0), 0);
+---
+
+<BaseLayout title="随笔" description="按时间归档的随笔">
+  <div class="page-head">
+    <h1>随笔</h1>
+    <p class="muted">按时间归档 · 共 {total} 篇</p>
+  </div>
+
+  {groups.map((g) => (
+    <section class="year">
+      <h2 class="year__title">{g.year} 年</h2>
+      {g.months.map((m) => (
+        <div class="month">
+          <h3 class="month__title">{m.month} 月 <span class="muted">· {m.posts.length} 篇</span></h3>
+          <ul class="archive">
+            {m.posts.map((post) => (
+              <li class="archive-item">
+                <a href={`/blog/${post.id}/`} class="archive-item__link">
+                  <div class="archive-item__cover"><Cover entry={post} /></div>
+                  <div class="archive-item__body">
+                    <time datetime={post.data.pubDate.toISOString()} class="archive-item__date">
+                      {post.data.pubDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
+                    </time>
+                    <span class="archive-item__title">{post.data.title}</span>
+                    {post.data.description && <span class="archive-item__desc soft">{post.data.description}</span>}
+                    <div class="archive-item__tags">
+                      {post.data.tags.map((t) => <span class="tag" data-index={(tagColorIndex(t) - 1)}>{t}</span>)}
+                    </div>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  ))}
+</BaseLayout>
+
+<style>
+  .page-head { margin-bottom: 1.4rem; }
+  .year { margin-bottom: 2rem; }
+  .year__title {
+    font-size: 1.6rem;
+    border-bottom: 2px solid var(--brand);
+    display: inline-block;
+    padding-bottom: 0.2rem;
+    margin-bottom: 1rem;
+  }
+  .month { margin-bottom: 1.4rem; }
+  .month__title { font-size: 1.1rem; margin: 0 0 0.7rem; font-family: var(--font-sans); font-weight: 600; }
+  .archive { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+  .archive-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color var(--transition), transform var(--transition); }
+  .archive-item:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .archive-item__link { display: flex; gap: 1rem; color: inherit; padding: 0.7rem; }
+  .archive-item__link:hover { color: inherit; }
+  .archive-item__cover { flex: 0 0 120px; }
+  .archive-item__cover :global(.cover) { aspect-ratio: 16 / 10; border-radius: var(--radius-sm); }
+  .archive-item__body { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+  .archive-item__date { font-size: 0.8rem; color: var(--text-muted); }
+  .archive-item__title { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600; }
+  .archive-item__desc { font-size: 0.9rem; }
+  .archive-item__tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.2rem; }
+  @media (max-width: 520px) {
+    .archive-item__link { flex-direction: column; }
+    .archive-item__cover { flex-basis: auto; }
+  }
+</style>

@@ -1,0 +1,32 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import type { Page } from '../lib/paginate';
+import PostCard from './PostCard.astro';
+import Pagination from './Pagination.astro';
+
+interface Props {
+  page: Page<CollectionEntry<'blog'>>;
+  title: string;
+  description?: string;
+  base: string;
+}
+
+const { page, title, description, base } = Astro.props;
+---
+
+<div class="page-head">
+  <h1>{title}</h1>
+  {description && <p class="muted">{description}</p>}
+</div>
+
+<div class="post-list">
+  {page.data.map((post, i) => <PostCard entry={post} index={i} />)}
+</div>
+
+<Pagination page={page} base={base} />
+
+<style>
+  .page-head { margin-bottom: 1.6rem; }
+  .page-head p { margin: 0.3rem 0 0; }
+  .post-list { display: grid; gap: 1.1rem; }
+</style>

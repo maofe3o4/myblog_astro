@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostIndex from '../../components/PostIndex.astro';
+import { getPosts } from '../../lib/posts';
+import { paginate } from '../../lib/paginate';
+
+const posts = await getPosts();
+const { props } = paginate(posts, { pageSize: 5, base: '/blog' })[0];
+const page = props.page;
+---
+
+<BaseLayout title="全部文章" description={`全部文章，共 ${page.total} 篇`}>
+  <PostIndex page={page} title="全部文章" description={`共 ${page.total} 篇 · 随笔与笔记`} base="/blog" />
+</BaseLayout>
