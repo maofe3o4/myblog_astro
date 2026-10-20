@@ -27,14 +27,8 @@ const updatedStr = updatedDate?.toLocaleDateString('zh-CN', {
 // 左侧目录：与当前文章同类型的全部文章，按时间倒序
 const siblings = (type === 'note' ? await getNotes() : await getEssays());
 const siblingLabel = TYPE_LABEL[type];
-// 右侧目录：取正文二级、三级标题，二级用中文序号
-const rawOutline = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
-const ZH = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五'];
-let h2Idx = 0;
-const outline = rawOutline.map((h) => {
-  if (h.depth === 2) return { ...h, num: ZH[h2Idx++] ?? String(h2Idx) };
-  return { ...h, num: '' };
-});
+// 右侧目录：取正文二级、三级标题（标题自带编号，目录不再额外加序号）
+const outline = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
 ---
 
 <BaseLayout title={title} description={description} wide>
@@ -95,7 +89,7 @@ const outline = rawOutline.map((h) => {
               class:list={['doc__outline-link', h.depth === 2 ? 'lvl-2' : 'lvl-3']}
               data-target={h.slug}
             >
-              {h.num && <span class="doc__outline-num">{h.num}、</span>}{h.text}
+              {h.text}
             </a>
           ))}
         </nav>
@@ -259,9 +253,10 @@ const outline = rawOutline.map((h) => {
   .doc__index-date { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
   .doc__no-match { font-size: 0.82rem; color: var(--text-muted); margin: 0.4rem 0 0; }
 
-  /* 右：当前文章目录（编号 + 滚动高亮） */
+  /* 右：当前文章目录（滚动高亮） */
   .doc__outline { display: flex; flex-direction: column; gap: 0.1rem; border-left: 2px solid var(--border); }
   .doc__outline-link {
+    display: block;
     padding: 0.28rem 0.7rem;
     color: var(--text-soft);
     font-size: 0.86rem;
@@ -276,7 +271,6 @@ const outline = rawOutline.map((h) => {
     border-left-color: var(--brand);
     font-weight: 600;
   }
-  .doc__outline-num { font-weight: 700; margin-right: 0.1em; }
   .doc__outline-link.lvl-3 { padding-left: 1.6rem; font-size: 0.82rem; }
 
   /* 响应式：先收左栏，再收右栏 */
