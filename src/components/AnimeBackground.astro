@@ -25,7 +25,7 @@ try {
 }
 ---
 
-<div id="anime-bg" class="anime-bg" aria-hidden="true" transition:persist>
+<div id="anime-bg" class="anime-bg" aria-hidden="true" transition:persist data-covers={JSON.stringify(covers)}>
   <img class="bg-img" id="bg-img" alt="" />
   <div class="bg-vignette"></div>
   <div class="bg-grain"></div>
@@ -92,12 +92,17 @@ try {
   }
 </style>
 
-<script define:vars={{ COVERS: covers }}>
+<script>
+  // 注意：不能用 <script define:vars> —— define:vars 会令脚本以内联经典脚本输出，
+  // 其中的 import 语句在浏览器解析阶段直接 SyntaxError，整段脚本不执行
+  // （dev 模式下 Vite 会编译所以看不出问题，生产构建后背景/雨滴全失效）。
+  // covers 改经 #anime-bg 的 data-covers 属性传入。
   import { loadSettings, SETTINGS_EVENT } from '../lib/settings';
 
+  const wrap = document.getElementById('anime-bg');
+  const COVERS: string[] = JSON.parse(wrap?.dataset.covers || '[]');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const wrap = document.getElementById('anime-bg');
   const img = document.getElementById('bg-img');
   const canvas = document.getElementById('bg-rain');
 
