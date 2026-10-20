@@ -1,3 +1,0 @@
-[     193ms] TypeError: url.replace is not a function
-    at prefetch (http://localhost:4321/node_modules/astro/dist/prefetch/index.js?v=0373d8f5:123:13)
-    at http://localhost:4321/src/layouts/BaseLayout.astro?astro&type=script&index=1&lang.ts:3:1

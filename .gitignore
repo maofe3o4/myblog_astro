@@ -23,3 +23,5 @@ s2.yaml
 snap1.yaml
 Thumbs.db
 sixflowers功能补全计划.txt
+# playwright-cli 调试产物
+.playwright-cli/
