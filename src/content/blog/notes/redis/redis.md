@@ -134,7 +134,7 @@ lastsave：获取最后一次成功执行快照的时间
 
 ## AOF
 
-![![image-20240813172014778]](/images/持久化.png)
+![![image-20240813172014778]](/images/持久化.png.webp)
 
 Redis会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次rewrite后大小的一倍且文件大于64M时触发
 

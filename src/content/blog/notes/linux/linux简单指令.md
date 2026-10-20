@@ -42,7 +42,7 @@ description: "linux常用指令，包括文件，用户，进程，磁盘，服�
 
 [回到目录](#jump1)
 
-![![image-20240604094822494]](/images/图片1.png)
+![![image-20240604094822494]](/images/图片1.png.webp)
 
 绝对路径：/usr/include/a.h
 相对路径：如果当前目录为/usr，则include/a.h为相对路径等同于上面
@@ -63,9 +63,9 @@ bin执行，lib库，etc是配置，usr和home是'我的'，dev管设备，opt�
 
 [回到目录](#jump1)
 
-![![vim工作模式]](/images/vim.png)
+![![vim工作模式]](/images/vim.png.webp)
 
-![![vim键盘]](/images/vim键盘.png)
+![![vim键盘]](/images/vim键盘.png.webp)
 
 命令模式
 
@@ -138,7 +138,7 @@ drwxr-xr-x. 4 root root 80 9月 26 17：05 aaa
 |     最后一次被修改的时间     |                        创建/last修改                         | 9月 26 17：05 |
 |         目录或文件名         |                                                              |      aaa      |
 
-![![image-20240604094822494]](/images/图片2.png)
+![![image-20240604094822494]](/images/图片2.png.webp)
 
 ## 修改目录和文件权限
 
@@ -270,7 +270,7 @@ pstree [-p]/[-u]
 | N          | 以PID排序             |
 | q          | 退出top               |
 
-![![top性能分析]](/images/top性能分析.png)
+![![top性能分析]](/images/top性能分析.png.webp)
 
 | 第一行           |            |                |      |                                                              |      |
 | ---------------- | ---------- | -------------- | ---- | ------------------------------------------------------------ | ---- |

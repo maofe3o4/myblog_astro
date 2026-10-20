@@ -94,12 +94,12 @@ tags: [Astro, 入门]
 所有图片统一放在 `public/images/`（不是跟着 md 走），正文用绝对路径引用：
 
 ```md
-![示意图](/images/my-first-note-diagram.png)
+![示意图](/images/my-first-note-diagram.png.webp)
 ```
 
 - 把图片文件直接丢进 `public/images/` 即可，构建时会原样拷贝到站点根目录。
 - 引用一律写 `/images/文件名`，不要写相对路径 `./xxx.png`。
-- 封面同理：`cover: /images/xxx.png`。
+- 封面同理：`cover: /images/xxx.png.webp`。
 - 文件名也建议小写、无空格，避免编码问题。
 
 ## 五、本地预览与发布

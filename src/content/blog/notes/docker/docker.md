@@ -101,7 +101,7 @@ rm -rf /var/lib/docker
 
 # 常用命令
 
-<img src="/images/docker命令.png" alt="docker命令" style="zoom: 200%;" />
+<img src="/images/docker命令.png.webp" alt="docker命令" style="zoom: 200%;" />
 
 | 命令                                           | 选项                                                         | 说明                       |
 | ---------------------------------------------- | ------------------------------------------------------------ | -------------------------- |

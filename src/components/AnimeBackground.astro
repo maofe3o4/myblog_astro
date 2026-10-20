@@ -98,8 +98,8 @@ try {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const wrap = document.getElementById('anime-bg');
-  const img = document.getElementById('bg-img') as HTMLImageElement | null;
-  const canvas = document.getElementById('bg-rain') as HTMLCanvasElement | null;
+  const img = document.getElementById('bg-img');
+  const canvas = document.getElementById('bg-rain');
 
   // ---------- 背景图：本地 public/covers，按「日期」每日轮换 ----------
   const FALLBACK = '/bg-fallback.svg';
@@ -115,53 +115,81 @@ try {
     img.src = src;
   }
 
-  // ---------- 下雨（仅横幅区域内） ----------
+  // ---------- 下雨（仅横幅区域内），仅初始化一次，标签页隐藏时暂停 ----------
   let raf = 0;
-  let drops: { x: number; y: number; len: number; sp: number }[] = [];
+  let drops = [];
+  let W = 0, H = 0;
+  let rainReady = false;
+
+  function draw() {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(174, 214, 255, 0.55)';
+    ctx.lineWidth = 1.1;
+    for (const d of drops) {
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - 1.6, d.y + d.len);
+      ctx.stroke();
+      d.y += d.sp; d.x -= 0.4;
+      if (d.y > H) { d.y = -d.len; d.x = Math.random() * W; }
+    }
+    if (!reduced) raf = requestAnimationFrame(draw);
+  }
+
   function setupRain() {
     if (!canvas) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = canvas.clientWidth || window.innerWidth;
-    const h = canvas.clientHeight || window.innerHeight;
-    canvas.width = w * dpr; canvas.height = h * dpr;
+    W = canvas.clientWidth || window.innerWidth;
+    H = canvas.clientHeight || window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const s = loadSettings();
-    const count = Math.round(24 + (s.bgIntensity || 3) * 42); // 强度 1~5 → 66~234 滴（横幅区域较小，密度略降）
+    const count = Math.round(24 + (s.bgIntensity || 3) * 42); // 强度 1~5 → 66~234 滴
     drops = Array.from({ length: count }, () => ({
-      x: Math.random() * w, y: Math.random() * h,
+      x: Math.random() * W, y: Math.random() * H,
       len: 8 + Math.random() * 14, sp: 6 + Math.random() * 8,
     }));
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = 'rgba(174, 214, 255, 0.55)';
-      ctx.lineWidth = 1.1;
-      for (const d of drops) {
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x - 1.6, d.y + d.len);
-        ctx.stroke();
-        d.y += d.sp; d.x -= 0.4;
-        if (d.y > h) { d.y = -d.len; d.x = Math.random() * w; }
-      }
+    rainReady = true;
+  }
+
+  function startRain() {
+    if (!rainReady) return;
+    if (reduced) { draw(); return; } // 尊重减弱动效：仅静态单帧
+    if (document.visibilityState === 'visible') {
+      cancelAnimationFrame(raf);
       raf = requestAnimationFrame(draw);
-    };
+    }
+  }
+
+  function stopRain() {
     cancelAnimationFrame(raf);
-    if (reduced) { draw(); cancelAnimationFrame(raf); }
-    else raf = requestAnimationFrame(draw);
+    rainReady = false;
+    if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
   }
 
   function apply() {
     if (!wrap) return;
     const s = loadSettings();
-    if (s.bgRain && !reduced) setupRain();
-    else { cancelAnimationFrame(raf); if (canvas) canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height); }
+    if (s.bgRain && !reduced) {
+      if (!rainReady) setupRain();
+      startRain();
+    } else {
+      stopRain();
+    }
   }
 
   loadImage();
   apply();
   window.addEventListener(SETTINGS_EVENT, apply);
-  window.addEventListener('resize', () => { if (loadSettings().bgRain && !reduced) setupRain(); });
-  document.addEventListener('astro:page-load', () => { apply(); });
+  window.addEventListener('resize', () => {
+    if (loadSettings().bgRain && !reduced) { rainReady = false; setupRain(); startRain(); }
+  });
+  document.addEventListener('astro:page-load', apply);
+  // 切到后台标签时暂停动画，回到前台再恢复，降低常驻 CPU / 电量占用
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(raf);
+    else apply();
+  });
 </script>

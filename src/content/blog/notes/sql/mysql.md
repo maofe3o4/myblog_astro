@@ -166,7 +166,7 @@ delete支持回滚,truncate不支持回滚（sqlsever可以回滚）
 
 ### DQL
 
-![![条件符号]](/images/条件符号.png)
+![![条件符号]](/images/条件符号.png.webp)
 
 like模糊查询：%表示0个或1个或多个任意字符,_表示一个字符；比如姓马的人like ‘马%’,**如果要直接查询含有%的"/%"**
 
@@ -176,7 +176,7 @@ like模糊查询：%表示0个或1个或多个任意字符,_表示一个字符�
 
 聚合函数不能对NULL进行计算，使用时可以**avg(ifnull(列名，0))**，如果为，设置为0
 
-![![聚合函数]](/images/聚合函数.png)
+![![聚合函数]](/images/聚合函数.png.webp)
 
 []里面可写可不写，**当有多个排序条件时，当前边的条件值一样时，才会根据第二个条件排序**。
 
@@ -362,10 +362,10 @@ set autocommit=0;           修改mysql默认提交方式，改为手动
 
 mysql在可重复读下幻读的场景1
 
-![![聚合函数]](/images/幻读场景1.png)
+![![聚合函数]](/images/幻读场景1.png.webp)
 
 场景2
-![![聚合函数]](/images/幻读场景2.png)
+![![聚合函数]](/images/幻读场景2.png.webp)
 
 ### 函数
 
@@ -422,7 +422,7 @@ innoDB存储逻辑:支持事务，外键，行级锁提高并发性能
 
 #### 逻辑存储结果
 
-![![innodb]](/images/innodb.png)
+![![innodb]](/images/innodb.png.webp)
 
 | 存储空间 | |
 | --- | --- |
@@ -434,7 +434,7 @@ innoDB存储逻辑:支持事务，外键，行级锁提高并发性能
 
 #### 架构
 
-![![innodb架构]](/images/innodb架构.png)
+![![innodb架构]](/images/innodb架构.png.webp)
 
 内存结构：缓冲池、更改缓冲区、日志缓冲区、自适应哈希索引
 磁盘结构：系统表空间、每个表的表空间、通用表空间、撤销(undo)表空间、临时表空间、双写缓冲区、重做日志redo(重做日志缓冲(内存中)+重做日志文件(磁盘中))
@@ -477,7 +477,7 @@ readview(读视图)：快照读执行时MVCC提取数据的依据
 | max_trx_id     | 预分配事务id，当前最大事务id+1 |
 | creator_trx_id | readview创建者的事务id         |
 
-![![版本链数据访问规则]](/images/版本链数据访问规则.png)
+![![版本链数据访问规则]](/images/版本链数据访问规则.png.webp)
 
 不同的隔离级别，生成readview的时机不同：
 read committed：事务每次执行快照读时生成
@@ -524,7 +524,7 @@ show global status like 'Com       '   七条下划线
 开启方式：linux下mysql配置文件/etc/my.cnf
           windows下mysql配置文件my.ini或者mysql.ini
 
-![![慢查询]](/images/慢查询.png)
+![![慢查询]](/images/慢查询.png.webp)
 
 慢查询日志：linux下的路径/var/lib/mysql/localhost-slow.log
 
@@ -564,7 +564,7 @@ explain select .........
 
 load使用
 
-![![load插入数据]](/images/load插入数据.png)
+![![load插入数据]](/images/load插入数据.png.webp)
 
 #### 主键优化
 
@@ -993,7 +993,7 @@ show variables like '%general%'
 
 开启方式：linux下mysql配置文件/etc/my.cnf
                windows下mysql配置文件my.ini或者mysql.ini
-![![慢查询]](/images/慢查询.png)
+![![慢查询]](/images/慢查询.png.webp)
 
 慢查询日志：linux下的路径/var/lib/mysql/localhost-slow.log
 

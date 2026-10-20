@@ -33,7 +33,7 @@ setup->网络配置(监听器)->SQL PLUS(查看能否登录，用户名system)
 
 [回到目录](#jump1)
 
-![![oracle数据库系统结构]](/images/oracle数据库系统结构.png)
+![![oracle数据库系统结构]](/images/oracle数据库系统结构.png.webp)
 
 admin:以数据库为单位，存放数据库运行过程中产生的跟踪文件
 cfgtoologs:运行dbca、emca和netca图像化程序时产生的日志信息
@@ -56,7 +56,7 @@ Oracle数据库--> 数据库管理系统DBMS
 
 ## 物理存储和逻辑存储
 
-![![oracle数据库物理存储结构和逻辑存储结构]](/images/oracle数据库物理存储结构和逻辑存储结构.png)
+![![oracle数据库物理存储结构和逻辑存储结构]](/images/oracle数据库物理存储结构和逻辑存储结构.png.webp)
 
 表空间：数据文件=1：n             块：OS块=1：n
 
