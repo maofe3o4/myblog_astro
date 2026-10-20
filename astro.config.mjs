@@ -1,5 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // 六花 / Six Flowers 博客
 export default defineConfig({
@@ -15,8 +17,10 @@ export default defineConfig({
     },
   },
   markdown: {
+    // 数学公式：remark-math 识别 $…$ / $$…$$，rehype-katex 渲染为 KaTeX
+    remarkPlugins: [remarkMath],
     // 为 markdown 正文中的图片补上懒加载与异步解码，降低文章页首屏下载量
-    rehypePlugins: [rehypeLazyImages],
+    rehypePlugins: [rehypeKatex, rehypeLazyImages],
     shikiConfig: {
       // 与主题协调的代码高亮配色
       themes: { light: 'github-light', dark: 'github-dark' },
