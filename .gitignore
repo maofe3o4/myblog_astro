@@ -25,3 +25,5 @@ Thumbs.db
 sixflowers功能补全计划.txt
 # playwright-cli 调试产物
 .playwright-cli/
+# 本地离线脚本（PDF 转换/合并等，与博客构建无关，不入库）
+local-tools/
